@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          UserRole  @default(JOBSEEKER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  profile       Profile?
+  applications  Application[]
+  jobListings   JobListing[]
+  matches       Match[]   @relation("UserMatches")
+  matchedWith   Match[]   @relation("MatchedWithUser")
+  employerChats Chat[] @relation("EmployerChats")
+  applicantChats Chat[] @relation("ApplicantChats")
+  messages       Message[]
+}
+
+model Profile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String?
+  bio           String?
+  skills        String[]
+  experience    Json?
+  education     Json?
+  resumeUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model JobListing {
+  id            String    @id @default(cuid())
+  title         String
+  company       String
+  description   String
+  requirements  String[]
+  location      String?
+  salary        String?
+  type          JobType
+  employerId    String
+  employer      User      @relation(fields: [employerId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  applications  Application[]
+  matches       Match[]
+  chats         Chat[]
+}
+
+model Application {
+  id            String    @id @default(cuid())
+  jobListingId  String
+  jobListing    JobListing @relation(fields: [jobListingId], references: [id])
+  applicantId   String
+  applicant     User      @relation(fields: [applicantId], references: [id])
+  status        ApplicationStatus @default(PENDING)
+  coverLetter   String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Match {
+  id            String    @id @default(cuid())
+  jobListingId  String
+  jobListing    JobListing @relation(fields: [jobListingId], references: [id])
+  userId        String
+  user          User      @relation("UserMatches", fields: [userId], references: [id])
+  matchedWithId String
+  matchedWith   User      @relation("MatchedWithUser", fields: [matchedWithId], references: [id])
+  status        MatchStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Chat {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  jobListing JobListing @relation(fields: [jobListingId], references: [id])
+  jobListingId String
+  employer   User      @relation("EmployerChats", fields: [employerId], references: [id])
+  employerId String
+  applicant  User      @relation("ApplicantChats", fields: [applicantId], references: [id])
+  applicantId String
+  messages   Message[]
+
+  @@unique([jobListingId, employerId, applicantId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  chat      Chat     @relation(fields: [chatId], references: [id])
+  chatId    String
+  sender    User     @relation(fields: [senderId], references: [id])
+  senderId  String
+  read      Boolean  @default(false)
+}
+
+enum UserRole {
+  JOBSEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWING
+  ACCEPTED
+  REJECTED
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
