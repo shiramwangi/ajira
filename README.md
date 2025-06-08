@@ -1,5 +1,9 @@
 # Ajira - Job Platform
 
+![WhatsApp Image 2025-05-30 at 18 07 31_32ff8f21](https://github.com/user-attachments/assets/8f8c7009-030f-406c-9aa6-a4f63204ec49)
+![WhatsApp Image 2025-05-30 at 18 07 30_3ee0194b](https://github.com/user-attachments/assets/26e8d9d8-be72-4faa-8631-f9b69c9487b3)
+
+
 A modern job platform built with Next.js, Prisma, and Clerk authentication.
 
 ## 🚀 Features
